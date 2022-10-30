@@ -10,7 +10,7 @@ import (
 	"github.com/leminhviett/TCP-server/domain/utils"
 )
 
-func StartClient() {
+func StartClientCmd() {
 	conn, err := net.Dial(config.CONN_TYPE, 
 		fmt.Sprintf("%s:%s", config.CONN_HOST, config.CONN_PORT))
 	if err != nil {
@@ -29,7 +29,7 @@ func StartClient() {
 		}
 		fmt.Println(messsage)
 		
-		err := utils.WriteTo(conn, messsage)
+		_, err := utils.WriteTo(conn, messsage)
 		if err != nil {
 			fmt.Println(err)
 			panic(err)
@@ -38,7 +38,9 @@ func StartClient() {
 		returnB := make([]byte, 1024)
 		conn.Read(returnB)
 		fmt.Println("->: " + string(returnB))
-
 	}
+}
+
+func StartClientTest() {
 
 }
