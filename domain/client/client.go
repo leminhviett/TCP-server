@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/leminhviett/TCP-server/config"
+	"github.com/leminhviett/TCP-server/domain/utils"
 )
 
 func StartClient() {
@@ -15,12 +16,20 @@ func StartClient() {
 	if err != nil {
 		panic(err)
 	}
+	defer conn.Close()
+
 
 	for {
 		reader := bufio.NewReader(os.Stdin)
-		fmt.Print(">> ")
+		fmt.Print(">> Enter route ")
 		text, _ := reader.ReadString('\n')
-		_, err := conn.Write([]byte(text))
+
+		messsage := &utils.Message{
+			ApplicationRoute: text,
+		}
+		fmt.Println(messsage)
+		
+		err := utils.WriteTo(conn, messsage)
 		if err != nil {
 			fmt.Println(err)
 			panic(err)

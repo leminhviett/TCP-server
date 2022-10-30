@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/leminhviett/TCP-server/config"
+	"github.com/leminhviett/TCP-server/domain/utils"
 )
 
 func StartServer() {
@@ -32,20 +33,15 @@ func StartServer() {
 }
 
 func handleRequest(conn net.Conn) {
+	defer conn.Close()
 	fmt.Println("client at: " + conn.RemoteAddr().String())
-	// Make a buffer to hold incoming data.
 
 	for {
-		buf := make([]byte, 1024)
-
-		// Read the incoming connection into the buffer.
-		reqLen, err := conn.Read(buf)
+		message, err := utils.ReadFrom(conn)
 		if err != nil {
-			fmt.Println("Error reading:", err.Error())
+			panic(err)
 		}
-
-		fmt.Println("Receiving (bytes): ", reqLen)
-		fmt.Println(string(buf))
+		fmt.Println(message)
 
 		// Send a response back to person contacting us.
 		conn.Write([]byte("Message received."))
