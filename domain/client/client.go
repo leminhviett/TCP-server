@@ -40,7 +40,3 @@ func StartClientCmd() {
 		fmt.Println("->: " + string(returnB))
 	}
 }
-
-func StartClientTest() {
-
-}

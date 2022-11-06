@@ -41,7 +41,7 @@ func ReadFrom(conn net.Conn) (*Message, error){
 	dataLengthB := make([]byte, 8)
 	_, err := conn.Read(dataLengthB)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	dataLength := binary.LittleEndian.Uint64(dataLengthB)
 
@@ -49,7 +49,7 @@ func ReadFrom(conn net.Conn) (*Message, error){
 	dataB := make([]byte, dataLength)
 	_, err = conn.Read(dataB)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	fmt.Println(dataB)
