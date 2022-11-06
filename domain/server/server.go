@@ -9,7 +9,7 @@ import (
 	"github.com/leminhviett/TCP-server/domain/utils"
 )
 
-func StartServer() {
+func StartBackend() {
 	l, err := net.Listen(config.CONN_TYPE, config.CONN_HOST+":"+config.CONN_PORT)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())

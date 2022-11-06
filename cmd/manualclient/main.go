@@ -1,4 +1,4 @@
-package client
+package main
 
 import (
 	"bufio"
@@ -10,7 +10,11 @@ import (
 	"github.com/leminhviett/TCP-server/domain/utils"
 )
 
-func StartClientCmd() {
+func main() {
+	startBackendForFrontendCmd()
+}
+
+func startBackendForFrontendCmd() {
 	conn, err := net.Dial(config.CONN_TYPE, 
 		fmt.Sprintf("%s:%s", config.CONN_HOST, config.CONN_PORT))
 	if err != nil {
@@ -40,3 +44,4 @@ func StartClientCmd() {
 		fmt.Println("->: " + string(returnB))
 	}
 }
+
