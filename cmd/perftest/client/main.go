@@ -8,33 +8,35 @@ import (
 )
 
 func main(){
-	performanceTester()
+	performanceTester(1000, 8)
 }
 
-func performanceTester() {
+func performanceTester(times, threads int) {
 	var wg sync.WaitGroup
 	var m sync.Mutex
 
 	failedTimes := 0
 	
 	simpleCaller := func() {
-		_, err := http.Get("http://localhost:8001/")
-		if err != nil {
-			m.Lock()
-			failedTimes += 1 
-			defer m.Unlock()
-			fmt.Println(err.Error())
+		for j:= 0; j < times; j ++ {
+			_, err := http.Get("http://localhost:8001/")
+			if err != nil {
+				m.Lock()
+				failedTimes += 1 
+				defer m.Unlock()
+				fmt.Println(err.Error())
+			}
 		}
 		wg.Done()
 	}
 
 	timeStart := time.Now()
-
-	times := 1000
-	for j:= 0; j < times; j ++ {
+	for i := 0; i < threads; i ++ {
+		fmt.Println("thread created")
 		wg.Add(1)
 		go simpleCaller()
 	}
+
 
 	wg.Wait()
 	timeEnd := time.Now()
