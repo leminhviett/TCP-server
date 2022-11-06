@@ -13,19 +13,24 @@ func main(){
 
 func performanceTester() {
 	var wg sync.WaitGroup
+	var m sync.Mutex
+
+	failedTimes := 0
+	
 	simpleCaller := func() {
-		resp, err := http.Get("http://localhost:8001/")
+		_, err := http.Get("http://localhost:8001/")
 		if err != nil {
+			m.Lock()
+			failedTimes += 1 
+			defer m.Unlock()
 			fmt.Println(err.Error())
 		}
-	
-		fmt.Println(resp)
 		wg.Done()
 	}
 
 	timeStart := time.Now()
 
-	times := 100
+	times := 1000
 	for j:= 0; j < times; j ++ {
 		wg.Add(1)
 		go simpleCaller()
@@ -34,6 +39,8 @@ func performanceTester() {
 	wg.Wait()
 	timeEnd := time.Now()
 
-	fmt.Println("Elapsed: ...")
-	fmt.Println(timeEnd.Sub(timeStart).Seconds())
+	fmt.Printf("Elapsed: %f \n", timeEnd.Sub(timeStart).Seconds())
+
+	var failedRate float64 = float64(failedTimes)/float64(times)
+	fmt.Printf("Failed rate: %f \n", failedRate)
 }

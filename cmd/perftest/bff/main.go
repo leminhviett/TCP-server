@@ -23,6 +23,8 @@ func startBFFWithoutConnPool() {
 			return
 		}
 		defer conn.Close()
+		fmt.Printf("%s created \n", conn.LocalAddr().String())
+
 
 		messsage := &utils.Message{
 			ApplicationRoute: "hellodummy",
@@ -35,5 +37,6 @@ func startBFFWithoutConnPool() {
 
 	r := mux.NewRouter()
     r.HandleFunc("/", handler)
+	fmt.Println("Listening on 8001	")
 	http.ListenAndServe("localhost:8001", r)
 }

@@ -3,7 +3,6 @@ package utils
 import (
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"net"
 )
 
@@ -51,8 +50,6 @@ func ReadFrom(conn net.Conn) (*Message, error){
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(dataB)
 
 	// 3. Return real data
 	message := &Message{}

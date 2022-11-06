@@ -2,11 +2,13 @@ package server
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 
 	"github.com/leminhviett/TCP-server/config"
 	"github.com/leminhviett/TCP-server/domain/utils"
+	"github.com/leminhviett/TCP-server/domain/utils/customerror"
 )
 
 func StartBackend() {
@@ -34,13 +36,16 @@ func handleRequest(conn net.Conn) {
 
 	for {
 		message, err := utils.ReadFrom(conn)
-		if err != nil {
+		switch err {
+		case nil:
+			conn.Write([]byte("Message received."))
+			fmt.Println(message)
+		case io.EOF:
+			conn.Write([]byte(customerror.ErrorConnClosed.Error()))
+		default:
 			conn.Write([]byte("Error: " + err.Error()))
 			return
 		}
-		fmt.Println(message)
-
-		conn.Write([]byte("Message received."))
 	}
 
 }
