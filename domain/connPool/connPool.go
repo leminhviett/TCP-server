@@ -97,8 +97,6 @@ func (cp *ConnPoolImpl) requestNewConn(ctx context.Context) (*NetConn, error) {
 		case <-ctx.Done():
 			return nil, ERR_GET_CONN_TIMEOUT
 		}
-	default:
-		return nil, ERR_CONN_POOL_QUEUE_FULL
 	}
 }
 
