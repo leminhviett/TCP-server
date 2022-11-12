@@ -3,70 +3,74 @@ package connpool
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"sync"
+
+	"github.com/leminhviett/TCP-server/config"
 )
 
 var (
-	ERR_GET_CONN_TIMEOUT = errors.New("Error get conn timeout")
+	ERR_GET_CONN_TIMEOUT      = errors.New("Error get conn timeout")
 	ERR_FREE_CONN_CHAN_CLOSED = errors.New("Free conn channel error")
-	CONN_POOL_QUEUE_FULL = errors.New("Conn q is full")
+	ERR_CONN_POOL_QUEUE_FULL  = errors.New("Error queue is full")
 )
 
 type NetConn struct {
 	net.Conn
 }
 
-type ConnPool interface{
+type ConnPool interface {
 	GetConn(ctx context.Context) (*NetConn, error)
 	PutConn(ctx context.Context, conn *NetConn)
 }
 
 type ConnPoolImpl struct {
-	freeConns chan *NetConn
-	requestQueue chan (chan *NetConn)
-	maxOpenConn int32
-	openConn int32
-	lock sync.Mutex
+	freeConn       chan *NetConn
+	requestQueue   chan (chan *NetConn)
+	maxOpenConn    int32
+	numberOpenConn int32
+	lock           sync.Mutex
 }
 
-func NewConnPool(maxIdleConn, maxOpenConn int32) *ConnPoolImpl {
+func NewConnPool(ctx context.Context, maxIdleConn, maxOpenConn int32) *ConnPoolImpl {
 	pool := &ConnPoolImpl{
-		freeConns: make(chan *NetConn, maxIdleConn),
+		freeConn:     make(chan *NetConn, maxIdleConn),
 		requestQueue: make(chan (chan *NetConn), maxIdleConn/2),
-		maxOpenConn: maxOpenConn,
+		maxOpenConn:  maxOpenConn,
 	}
 
-	go pool.handleRequest()
+	go pool.requestHandler(ctx)
 
 	return pool
 }
 
-func (cp *ConnPoolImpl) handleRequest() {
+func (cp *ConnPoolImpl) requestHandler(ctx context.Context) {
 	for {
-		request, ok := <- cp.requestQueue
+		request, ok := <-cp.requestQueue
 		if !ok {
-			continue
+			break //channel is closed
 		}
 
-		conn, ok := <- cp.freeConns
+		conn, ok := <-cp.freeConn
 		if !ok {
-			break
+			break //channel is closed
 		}
 
 		select {
 		case request <- conn:
 		default:
+			cp.PutConn(ctx, conn) // handle edge case when requester close the channel
 			continue
 		}
-	}	
+	}
 }
 
 func (cp *ConnPoolImpl) GetConn(ctx context.Context) (*NetConn, error) {
-	select{
+	select {
 	case <-ctx.Done():
 		return nil, ERR_GET_CONN_TIMEOUT
-	case conn, ok := <- cp.freeConns:
+	case conn, ok := <-cp.freeConn:
 		if !ok {
 			return nil, ERR_FREE_CONN_CHAN_CLOSED
 		}
@@ -77,52 +81,52 @@ func (cp *ConnPoolImpl) GetConn(ctx context.Context) (*NetConn, error) {
 }
 
 func (cp *ConnPoolImpl) requestNewConn(ctx context.Context) (*NetConn, error) {
-	if cp.openConn < cp.maxOpenConn {
+	if cp.numberOpenConn < cp.maxOpenConn {
 		return cp.createNewConn()
 	}
 
 	requester := make(chan *NetConn)
-	defer close(requester)
 
-	select{
+	select {
 	case <-ctx.Done():
 		return nil, ERR_GET_CONN_TIMEOUT
 	case cp.requestQueue <- requester:
 		select {
-		case conn, ok := <-requester:
-			if !ok {
-				return nil, ERR_FREE_CONN_CHAN_CLOSED
-			}
+		case conn := <-requester:
 			return conn, nil
 		case <-ctx.Done():
 			return nil, ERR_GET_CONN_TIMEOUT
 		}
 	default:
-		return nil, CONN_POOL_QUEUE_FULL
+		return nil, ERR_CONN_POOL_QUEUE_FULL
 	}
 }
 
 func (cp *ConnPoolImpl) createNewConn() (*NetConn, error) {
 	cp.lock.Lock()
-	cp.openConn += 1
+	cp.numberOpenConn += 1
 	cp.lock.Unlock()
 
 	return createNewConn()
 }
 
-func (cp *ConnPoolImpl) PutConn(ctx context.Context, conn *NetConn){
-	select{
-	case cp.freeConns <- conn:
-		return
+func (cp *ConnPoolImpl) PutConn(_ context.Context, conn *NetConn) {
+	select {
+	case cp.freeConn <- conn:
 	default:
 		cp.lock.Lock()
-		cp.openConn -= 1
+		cp.numberOpenConn -= 1
 		cp.lock.Unlock()
-		conn.Close()
-		return
+		err := conn.Close()
+		if err != nil {
+			return
+		}
 	}
 }
 
-var createNewConn = func() (*NetConn, error){
-	return &NetConn{}, nil
+var createNewConn = func() (*NetConn, error) {
+	conn, err := net.Dial(config.TCP_CONN_TYPE,
+		fmt.Sprintf("%s:%s", config.TCP_SERVER_CONN_HOST, config.TCP_SERVER_CONN_PORT))
+
+	return &NetConn{conn}, err
 }

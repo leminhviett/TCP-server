@@ -15,13 +15,12 @@ func main() {
 }
 
 func startBackendForFrontendCmd() {
-	conn, err := net.Dial(config.CONN_TYPE, 
-		fmt.Sprintf("%s:%s", config.CONN_HOST, config.CONN_PORT))
+	conn, err := net.Dial(config.TCP_CONN_TYPE,
+		fmt.Sprintf("%s:%s", config.TCP_SERVER_CONN_HOST, config.TCP_SERVER_CONN_PORT))
 	if err != nil {
 		panic(err)
 	}
 	defer conn.Close()
-
 
 	for {
 		reader := bufio.NewReader(os.Stdin)
@@ -32,7 +31,7 @@ func startBackendForFrontendCmd() {
 			ApplicationRoute: text,
 		}
 		fmt.Println(messsage)
-		
+
 		_, err := utils.WriteTo(conn, messsage)
 		if err != nil {
 			fmt.Println(err)
@@ -44,4 +43,3 @@ func startBackendForFrontendCmd() {
 		fmt.Println("->: " + string(returnB))
 	}
 }
-

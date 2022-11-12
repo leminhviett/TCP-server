@@ -12,13 +12,13 @@ import (
 )
 
 func StartBackend() {
-	l, err := net.Listen(config.CONN_TYPE, config.CONN_HOST+":"+config.CONN_PORT)
+	l, err := net.Listen(config.TCP_CONN_TYPE, config.TCP_SERVER_CONN_HOST+":"+config.TCP_SERVER_CONN_PORT)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
 	defer l.Close()
-	fmt.Println("Listening on " + config.CONN_HOST + ":" + config.CONN_PORT)
+	fmt.Println("Listening on " + config.TCP_SERVER_CONN_HOST + ":" + config.TCP_SERVER_CONN_PORT)
 
 	for {
 		conn, err := l.Accept()

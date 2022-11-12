@@ -1,9 +1,14 @@
 package config
 
 const (
-	CONN_TYPE = "tcp"
-	CONN_HOST = "localhost"
-	CONN_PORT = "8000"
+	TCP_CONN_TYPE        = "tcp"
+	TCP_SERVER_CONN_HOST = "localhost"
+	TCP_SERVER_CONN_PORT = "8000"
+)
+
+const (
+	BFF_SERVER_CONN_HOST = "localhost"
+	BFF_SERVER_CONN_PORT = "8001"
 )
 
 const (
