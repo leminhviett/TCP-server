@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	performanceTester(1000, 8)
+	performanceTester(200, 20)
 }
 
 func performanceTester(times, threads int) {
@@ -22,7 +22,7 @@ func performanceTester(times, threads int) {
 	simpleCaller := func() {
 		for j := 0; j < times; j++ {
 			resp, err := http.Get(fmt.Sprintf("http://%s:%s", config.BFF_SERVER_CONN_HOST, config.BFF_SERVER_CONN_PORT))
-			if err != nil || resp.StatusCode == 400 {
+			if err != nil || resp.StatusCode == 500 {
 				m.Lock()
 				failedTimes += 1
 				defer m.Unlock()
@@ -31,7 +31,11 @@ func performanceTester(times, threads int) {
 				if resp != nil {
 					code = resp.StatusCode
 				}
-				fmt.Println(fmt.Sprintf("Error: %s - code: %d", err.Error(), code))
+				var errStr string
+				if err != nil {
+					errStr = err.Error()
+				}
+				fmt.Println(fmt.Sprintf("Error: %s - code: %d", errStr, code))
 			}
 		}
 		wg.Done()
@@ -51,4 +55,5 @@ func performanceTester(times, threads int) {
 
 	var failedRate float64 = float64(failedTimes) / float64(times)
 	fmt.Printf("Failed rate: %f \n", failedRate)
+	fmt.Println(failedTimes)
 }

@@ -36,9 +36,11 @@ type ConnPoolImpl struct {
 func NewConnPool(ctx context.Context, maxIdleConn, maxOpenConn int32) *ConnPoolImpl {
 	pool := &ConnPoolImpl{
 		freeConn:     make(chan *NetConn, maxIdleConn),
-		requestQueue: make(chan (chan *NetConn), maxIdleConn/2),
+		requestQueue: make(chan (chan *NetConn), maxOpenConn/2),
 		maxOpenConn:  maxOpenConn,
 	}
+
+	fmt.Printf("freeConn cap: %d, queue cap: %d, maxOpenConn: %d \n", cap(pool.freeConn), cap(pool.requestQueue), maxOpenConn)
 
 	go pool.requestHandler(ctx)
 

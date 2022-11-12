@@ -43,13 +43,11 @@ func handleRequest(conn net.Conn) {
 
 	for {
 		message, err := utils.ReadFrom(conn)
-		fmt.Println("read message")
 		switch err {
 		case nil:
 			utils.WriteTo(conn, &utils.Message{
 				ApplicationRoute: "from " + message.ApplicationRoute,
 			})
-			fmt.Println(message)
 		case io.EOF:
 			utils.WriteTo(conn, &utils.Message{
 				ApplicationData: []byte(customerror.ErrorConnClosed.Error()),
