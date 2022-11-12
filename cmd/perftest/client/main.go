@@ -10,14 +10,16 @@ import (
 )
 
 func main() {
-	performanceTester(200, 20)
+	performanceTester(50, 20)
 }
 
 func performanceTester(times, threads int) {
 	var wg sync.WaitGroup
 	var m sync.Mutex
+	var m2 sync.Mutex
 
 	failedTimes := 0
+	count := 0
 
 	simpleCaller := func() {
 		for j := 0; j < times; j++ {
@@ -25,7 +27,7 @@ func performanceTester(times, threads int) {
 			if err != nil || resp.StatusCode == 500 {
 				m.Lock()
 				failedTimes += 1
-				defer m.Unlock()
+				m.Unlock()
 
 				var code int
 				if resp != nil {
@@ -37,6 +39,10 @@ func performanceTester(times, threads int) {
 				}
 				fmt.Println(fmt.Sprintf("Error: %s - code: %d", errStr, code))
 			}
+			m2.Lock()
+			count += 1
+			fmt.Println(count)
+			m2.Unlock()
 		}
 		wg.Done()
 	}

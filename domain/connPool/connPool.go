@@ -83,9 +83,18 @@ func (cp *ConnPoolImpl) GetConn(ctx context.Context) (*NetConn, error) {
 }
 
 func (cp *ConnPoolImpl) requestNewConn(ctx context.Context) (*NetConn, error) {
-	if cp.numberOpenConn < cp.maxOpenConn {
-		return cp.createNewConn()
+	cp.lock.Lock()
+	if cp.maxOpenConn > cp.numberOpenConn {
+		conn, err := createNewConn()
+		if err != nil {
+			cp.lock.Unlock()
+			return nil, err
+		}
+		cp.numberOpenConn += 1
+		cp.lock.Unlock()
+		return conn, nil
 	}
+	cp.lock.Unlock()
 
 	requester := make(chan *NetConn)
 
@@ -100,14 +109,6 @@ func (cp *ConnPoolImpl) requestNewConn(ctx context.Context) (*NetConn, error) {
 			return nil, ERR_GET_CONN_TIMEOUT
 		}
 	}
-}
-
-func (cp *ConnPoolImpl) createNewConn() (*NetConn, error) {
-	cp.lock.Lock()
-	cp.numberOpenConn += 1
-	cp.lock.Unlock()
-
-	return createNewConn()
 }
 
 func (cp *ConnPoolImpl) PutConn(_ context.Context, conn *NetConn) {

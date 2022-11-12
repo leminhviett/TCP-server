@@ -50,7 +50,7 @@ func startBFFWithoutConnPool() {
 
 func startBFFWithConnPool() {
 	ctx := context.Background()
-	pool := connpool.NewConnPool(ctx, 3, 3)
+	pool := connpool.NewConnPool(ctx, 15, 15)
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		ctxRequest, cancel := context.WithTimeout(ctx, 1*time.Second)
