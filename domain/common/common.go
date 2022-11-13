@@ -1,4 +1,4 @@
-package utils
+package common
 
 import (
 	"encoding/binary"
@@ -12,14 +12,14 @@ type Message struct {
 }
 type MessagePayload []byte
 
-func WriteTo(conn net.Conn, message *Message) (int, error) {
+func WriteToConn(conn net.Conn, message *Message) (int, error) {
 	// 1. Convert data to byte
 	messageB, err := json.Marshal(message)
 	if err != nil {
 		panic(err)
 	}
 	var dataLength uint64 = uint64(len(messageB))
-	
+
 	// 2. Put data length & real data into place holder
 	buf := make([]byte, 8+dataLength)
 	// put data length to buffer
@@ -33,7 +33,7 @@ func WriteTo(conn net.Conn, message *Message) (int, error) {
 	return conn.Write(buf)
 }
 
-func ReadFrom(conn net.Conn) (*Message, error) {
+func ReadFromConn(conn net.Conn) (*Message, error) {
 	// 1. Get data length
 	dataLengthB := make([]byte, 8)
 	_, err := conn.Read(dataLengthB)

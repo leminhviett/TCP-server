@@ -24,20 +24,13 @@ func performanceTester(times, threads int) {
 	simpleCaller := func() {
 		for j := 0; j < times; j++ {
 			resp, err := http.Get(fmt.Sprintf("http://%s:%s", config.BFF_SERVER_CONN_HOST, config.BFF_SERVER_CONN_PORT))
-			if err != nil || resp.StatusCode == 500 {
+			if err != nil || (resp != nil && resp.StatusCode == 500) {
 				m.Lock()
 				failedTimes += 1
 				m.Unlock()
-
-				var code int
-				if resp != nil {
-					code = resp.StatusCode
-				}
-				var errStr string
 				if err != nil {
-					errStr = err.Error()
+					fmt.Println(err.Error())
 				}
-				fmt.Println(fmt.Sprintf("Error: %s - code: %d", errStr, code))
 			}
 			m2.Lock()
 			count += 1

@@ -2,18 +2,12 @@ package connpool
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"sync"
 
 	"github.com/leminhviett/TCP-server/config"
-)
-
-var (
-	ERR_GET_CONN_TIMEOUT      = errors.New("Error get conn timeout")
-	ERR_FREE_CONN_CHAN_CLOSED = errors.New("Free conn channel error")
-	ERR_CONN_POOL_QUEUE_FULL  = errors.New("Error queue is full")
+	"github.com/leminhviett/TCP-server/domain/customError"
 )
 
 type NetConn struct {
@@ -71,10 +65,10 @@ func (cp *ConnPoolImpl) requestHandler(ctx context.Context) {
 func (cp *ConnPoolImpl) GetConn(ctx context.Context) (*NetConn, error) {
 	select {
 	case <-ctx.Done():
-		return nil, ERR_GET_CONN_TIMEOUT
+		return nil, customError.ERR_GET_CONN_TIMEOUT
 	case conn, ok := <-cp.freeConn:
 		if !ok {
-			return nil, ERR_FREE_CONN_CHAN_CLOSED
+			return nil, customError.ERR_FREE_CONN_CHAN_CLOSED
 		}
 		return conn, nil
 	default:
@@ -100,13 +94,13 @@ func (cp *ConnPoolImpl) requestNewConn(ctx context.Context) (*NetConn, error) {
 
 	select {
 	case <-ctx.Done():
-		return nil, ERR_GET_CONN_TIMEOUT
+		return nil, customError.ERR_GET_CONN_TIMEOUT
 	case cp.requestQueue <- requester:
 		select {
 		case conn := <-requester:
 			return conn, nil
 		case <-ctx.Done():
-			return nil, ERR_GET_CONN_TIMEOUT
+			return nil, customError.ERR_GET_CONN_TIMEOUT
 		}
 	}
 }

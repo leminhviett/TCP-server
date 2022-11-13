@@ -1,4 +1,4 @@
-package utils
+package common
 
 import (
 	"net"
@@ -8,16 +8,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUtils(t *testing.T){
+func TestUtils(t *testing.T) {
 	//https://stackoverflow.com/questions/69692663/how-to-unit-test-a-net-conn-function-that-modifies-the-message-sent
 	serverConn, clientConn := net.Pipe()
 	message := &Message{
 		ApplicationRoute: "/hello",
-		ApplicationData: []byte{1,2,3},
+		ApplicationData:  []byte{1, 2, 3},
 	}
 
 	handleMessage := func() {
-		_, err := WriteTo(serverConn, message)
+		_, err := WriteToConn(serverConn, message)
 		assert.NoError(t, err)
 	}
 
@@ -30,8 +30,7 @@ func TestUtils(t *testing.T){
 		serverConn.Close()
 	}()
 
-	getMessage, err := ReadFrom(clientConn)
+	getMessage, err := ReadFromConn(clientConn)
 	assert.NoError(t, err)
 	assert.Equal(t, message, getMessage)
 }
-

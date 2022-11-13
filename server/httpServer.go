@@ -1,7 +1,8 @@
-package main
+package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -9,22 +10,11 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/leminhviett/TCP-server/config"
+	"github.com/leminhviett/TCP-server/domain/common"
 	connpool "github.com/leminhviett/TCP-server/domain/connPool"
-	"github.com/leminhviett/TCP-server/domain/utils"
 )
 
-var (
-	messsage = &utils.Message{
-		ApplicationRoute: "hellodummy",
-		ApplicationData:  []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
-	}
-)
-
-func main() {
-	startBFFWithConnPool()
-}
-
-func startBFFWithoutConnPool() {
+func BeForFe() {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		conn, err := net.Dial(config.TCP_CONN_TYPE,
 			fmt.Sprintf("%s:%s", config.TCP_SERVER_CONN_HOST, config.TCP_SERVER_CONN_PORT))
@@ -35,22 +25,16 @@ func startBFFWithoutConnPool() {
 		defer conn.Close()
 		fmt.Printf("%s created \n", conn.LocalAddr().String())
 
-		utils.WriteTo(conn, messsage)
+		common.WriteToConn(conn, dummyMessage)
 		fmt.Fprintf(w, "Message sent")
 	}
 
-	r := mux.NewRouter()
-	r.HandleFunc("/", handler)
-	fmt.Println("Listening on " + config.BFF_SERVER_CONN_PORT)
-	err := http.ListenAndServe(fmt.Sprintf("%s:%s", config.BFF_SERVER_CONN_HOST, config.BFF_SERVER_CONN_PORT), r)
-	if err != nil {
-		fmt.Println(err)
-	}
+	startHTTPServer(handler)
 }
 
-func startBFFWithConnPool() {
+func BeForFeWConnPool() {
 	ctx := context.Background()
-	pool := connpool.NewConnPool(ctx, 15, 15)
+	pool := connpool.NewConnPool(ctx, 12, 12)
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		ctxRequest, cancel := context.WithTimeout(ctx, 1*time.Second)
@@ -63,17 +47,22 @@ func startBFFWithConnPool() {
 		}
 		defer pool.PutConn(ctx, conn)
 
-		_, err = utils.WriteTo(conn, messsage)
+		_, err = common.WriteToConn(conn, dummyMessage)
 		if err != nil {
 			w.WriteHeader(500)
 			return
 		}
 
-		message, _ := utils.ReadFrom(conn)
-		fmt.Println(message)
+		message, _ := common.ReadFromConn(conn)
 		w.WriteHeader(200)
+		json.NewEncoder(w).Encode(message)
+		return
 	}
 
+	startHTTPServer(handler)
+}
+
+func startHTTPServer(handler func(w http.ResponseWriter, r *http.Request)) {
 	r := mux.NewRouter()
 	r.HandleFunc("/", handler)
 	fmt.Println("Listening on " + config.BFF_SERVER_CONN_PORT)
@@ -81,4 +70,9 @@ func startBFFWithConnPool() {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+var dummyMessage = &common.Message{
+	ApplicationRoute: "hellodummy",
+	ApplicationData:  []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 }

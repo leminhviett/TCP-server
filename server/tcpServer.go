@@ -7,11 +7,11 @@ import (
 	"os"
 
 	"github.com/leminhviett/TCP-server/config"
-	"github.com/leminhviett/TCP-server/domain/utils"
-	"github.com/leminhviett/TCP-server/domain/utils/customerror"
+	"github.com/leminhviett/TCP-server/domain/common"
+	"github.com/leminhviett/TCP-server/domain/customError"
 )
 
-func StartBackend() {
+func StartTCPServer() {
 	l, err := net.Listen(config.TCP_CONN_TYPE, config.TCP_SERVER_CONN_HOST+":"+config.TCP_SERVER_CONN_PORT)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
@@ -42,18 +42,19 @@ func handleRequest(conn net.Conn) {
 	defer conn.Close()
 
 	for {
-		message, err := utils.ReadFrom(conn)
+		message, err := common.ReadFromConn(conn)
 		switch err {
 		case nil:
-			utils.WriteTo(conn, &utils.Message{
-				ApplicationRoute: "from " + message.ApplicationRoute,
+			common.WriteToConn(conn, &common.Message{
+				ApplicationRoute: message.ApplicationRoute,
+				ApplicationData:  []byte("Data received"),
 			})
 		case io.EOF:
-			utils.WriteTo(conn, &utils.Message{
-				ApplicationData: []byte(customerror.ErrorConnClosed.Error()),
+			common.WriteToConn(conn, &common.Message{
+				ApplicationData: []byte(customError.ErrorConnClosed.Error()),
 			})
 		default:
-			utils.WriteTo(conn, &utils.Message{
+			common.WriteToConn(conn, &common.Message{
 				ApplicationData: []byte("Error: " + err.Error()),
 			})
 			return

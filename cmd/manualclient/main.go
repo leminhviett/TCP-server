@@ -7,14 +7,14 @@ import (
 	"os"
 
 	"github.com/leminhviett/TCP-server/config"
-	"github.com/leminhviett/TCP-server/domain/utils"
+	"github.com/leminhviett/TCP-server/domain/common"
 )
 
 func main() {
-	startBackendForFrontendCmd()
+	startTCPClient()
 }
 
-func startBackendForFrontendCmd() {
+func startTCPClient() {
 	conn, err := net.Dial(config.TCP_CONN_TYPE,
 		fmt.Sprintf("%s:%s", config.TCP_SERVER_CONN_HOST, config.TCP_SERVER_CONN_PORT))
 	if err != nil {
@@ -27,12 +27,12 @@ func startBackendForFrontendCmd() {
 		fmt.Print(">> Enter route ")
 		text, _ := reader.ReadString('\n')
 
-		messsage := &utils.Message{
+		messsage := &common.Message{
 			ApplicationRoute: text,
 		}
 		fmt.Println(messsage)
 
-		_, err := utils.WriteTo(conn, messsage)
+		_, err := common.WriteToConn(conn, messsage)
 		if err != nil {
 			fmt.Println(err)
 			panic(err)

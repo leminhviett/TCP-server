@@ -1,7 +1,8 @@
 package main
 
-import "github.com/leminhviett/TCP-server/domain/server"
+import "github.com/leminhviett/TCP-server/server"
 
 func main() {
-	server.StartBackend()
+	go server.StartTCPServer()
+	server.BeForFeWConnPool()
 }
