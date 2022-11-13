@@ -34,7 +34,6 @@ func performanceTester(times, threads int) {
 			}
 			m2.Lock()
 			count += 1
-			fmt.Println(count)
 			m2.Unlock()
 		}
 		wg.Done()
@@ -54,5 +53,5 @@ func performanceTester(times, threads int) {
 
 	var failedRate float64 = float64(failedTimes) / float64(times)
 	fmt.Printf("Failed rate: %f \n", failedRate)
-	fmt.Println(failedTimes)
+	fmt.Printf("failed times: %d; total request: %d", failedTimes, count)
 }
